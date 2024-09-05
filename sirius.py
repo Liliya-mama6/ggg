@@ -9,7 +9,7 @@ class Product:
         return f'{self.name}, {str(self.weight)}, {self.category}'
 
 class Shop:
-    __file_name='products.txt'
+    __file_name='products.txt'# не получилось создать код который сам создает файл и при этом не перезаписывает список продуктов так что нужно создать файл заранее
     def add(self, *products):
         for i in range(len(products)):
             file=open(self.__file_name, 'r')
