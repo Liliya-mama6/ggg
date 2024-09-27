@@ -1,8 +1,41 @@
-first_strings = ['Elon', 'Musk', 'Programmer', 'Monitors', 'Variable']
-second_strings = ['Task', 'Git', 'Comprehension', 'Java', 'Computer', 'Assembler']
-first_result=[len(i) for i in first_strings if len(i)>5]
-second_result=[(i, j) for i in first_strings for j in second_strings if len(i)==len(j)]
-third_result={i:len(i) for i in first_strings+second_strings if not len(i)%2}
-print(first_result)
-print(second_result)
-print(third_result)
+from random import randint
+from threading import Thread, Lock
+from time import sleep
+
+class Bank:
+    def __init__(self):
+        self.balance=0
+    lock=Lock()
+    def take(self):
+        for i in range(100):
+            a=randint(50, 500)
+            if self.lock:
+                print(f'Запрос на {a}'+'\n', end='')
+                if a>self.balance:
+                    print("Запрос отклонён, недостаточно средств"+'\n', end='')
+                    self.lock.acquire()
+                else:
+                    self.balance-=a
+                    print(f'Снятие: {a}. Баланс: {self.balance}'+'\n', end='')
+
+    def deposit(self):
+        for i in range(100):
+            b=randint(50, 500)
+            self.balance=self.balance+b
+            if self.balance>=500 and not self.lock:
+                self.lock.release()
+            print(f"Пополнение: {b}. Баланс: {self.balance}"+'\n', end='')
+
+
+bk = Bank()
+
+# Т.к. методы принимают self, в потоки нужно передать сам объект класса Bank
+th1 = Thread(target=Bank.deposit, args=(bk,))
+th2 = Thread(target=Bank.take, args=(bk,))
+
+th1.start()
+th2.start()
+th1.join()
+th2.join()
+
+print(f'Итоговый баланс: {bk.balance}')
