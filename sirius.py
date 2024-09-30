@@ -2,29 +2,36 @@ from random import randint
 from threading import Thread, Lock
 from time import sleep
 
+
 class Bank:
     def __init__(self):
-        self.balance=0
-    lock=Lock()
-    def take(self):
-        for i in range(100):
-            a=randint(50, 500)
-            if self.lock:
-                print(f'Запрос на {a}'+'\n', end='')
-                if a>self.balance:
-                    print("Запрос отклонён, недостаточно средств"+'\n', end='')
-                    self.lock.acquire()
-                else:
-                    self.balance-=a
-                    print(f'Снятие: {a}. Баланс: {self.balance}'+'\n', end='')
+        self.balance = 0
+        self.lock = Lock()
 
     def deposit(self):
-        for i in range(100):
-            b=randint(50, 500)
-            self.balance=self.balance+b
-            if self.balance>=500 and not self.lock:
+        for i in range(150):
+            b = randint(50, 500)
+            if self.lock.locked() and self.balance+b >= 500:
+                self.balance = self.balance + b
                 self.lock.release()
-            print(f"Пополнение: {b}. Баланс: {self.balance}"+'\n', end='')
+                print('блок снят')
+                print(f"Пополнение: {b}. Баланс: {self.balance}" + '\n', end='')
+            else:
+                self.balance = self.balance + b
+                print(f"Пополнение: {b}. Баланс: {self.balance}" + '\n', end='')
+
+    def take(self):
+        for i in range(150):
+            c = randint(50, 500)
+            if not self.lock.locked():
+                if c > self.balance:
+                    print(f'Запрос на {c}' + '\n', end='')
+                    self.lock.acquire()
+                    print("Запрос отклонён, недостаточно средств" + '\n', end='')
+                else:
+                    print(f'Запрос на {c}' + '\n', end='')
+                    self.balance -= c
+                    print(f'Снятие: {c}. Баланс: {self.balance}' + '\n', end='')
 
 
 bk = Bank()
