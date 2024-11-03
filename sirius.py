@@ -1,43 +1,48 @@
-import urban
-import unittest
+import asyncio
+from aiogram import Bot, Dispatcher, executor, types
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram.dispatcher.filters.state import State, StatesGroup
 
-class TournamentTest(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        global all_results
-        all_results={}
-    def setUp(self):
-        global a, b, c
-        a=urban.Runner('Усэйн', speed=10)
-        b=urban.Runner('Андрей', speed=9)
-        c=urban.Runner('Ник', speed=3)
-    @classmethod
-    def tearDownClass(cls):
-        global all_results
-        values=all_results.values()
-        for v in values:
-            print(str(v))
-    def test_tournament1(self):
-        global all_results
-        turnir = urban.Tournament(90, a, b, c)
-        all_result = turnir.start()
-        self.assertTrue(all_result[max(all_result.keys())]=='Ник')
-        for k in all_result.keys():#без этого цикла он мне не пойми ччто выводил
-            all_result[k]=all_result[k].name
-        all_results[1]=all_result
-    def test_tournament2(self):
-        global all_results
-        turnir = urban.Tournament(90, a, c)
-        all_result = turnir.start()
-        self.assertTrue(all_result[max(all_result.keys())]=='Ник')
-        for k in all_result.keys():
-            all_result[k]=all_result[k].name
-        all_results[2]=all_result
-    def test_tournament3(self):
-        global all_results
-        turnir = urban.Tournament(90, b, c)
-        all_result = turnir.start()
-        self.assertTrue(all_result[max(all_result.keys())]=='Ник')
-        for k in all_result.keys():
-            all_result[k]=all_result[k].name
-        all_results[3]=all_result
+api = ''
+bot = Bot(token=api)
+dp = Dispatcher(bot, storage=MemoryStorage())
+
+
+@dp.message_handler(commands=['start'])
+async def start_message(message):
+    await message.answer('Привет! Я бот помогающий твоему здоровью.')
+
+
+class UserState(StatesGroup):
+    age=State()
+    growth=State()
+    weight=State()
+
+@dp.message_handler(text=['Calories'])
+async def set_age(message):
+    await message.answer('Введите свой возраст:')
+    await UserState.age.set()
+
+@dp.message_handler(state=UserState.age)
+async def set_growth(message, state):
+    await state.update_data(age=message.text)
+    await message.answer('Введите свой рост:')
+    await UserState.growth.set()
+
+@dp.message_handler(state=UserState.growth)
+async def set_weight(message, state):
+    await state.update_data(growth=message.text)
+    await message.answer('Введите свой вес:')
+    await UserState.weight.set()
+
+@dp.message_handler(state=UserState.weight)
+async def send_calories(message, state):
+    await UserState.weight.set()
+    await state.update_data(weight=message.text)
+    data=await state.get_data()
+    res=10*int(data['weight'])+6.25*int(data['growth'])-5*int(data['age'])+5
+    await message.answer(str(res))
+    await state.finish()
+
+if __name__ == '__main__':
+    executor.start_polling(dp, skip_updates=True)
