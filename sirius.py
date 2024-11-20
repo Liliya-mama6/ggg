@@ -4,22 +4,28 @@ from typing import Annotated
 app=fastapi.FastAPI()
 
 #$ python3 -m uvicorn fgfg:app
-@app.get('/')
-async def welkome()->str:
-    return 'Главная страница'
+users = {'1': 'Имя: Example, возраст: 18'}
 
 
-@app.get('/user/admin')
-async def admin()->str:
-    return "Вы вошли как администратор"
+@app.get('/users')
+async def get() -> dict:
+    return users
 
 
-@app.get('/user/{userid}')
-async def iduser(userid:int=Path(ge=1, le=100, description='EnterUSER ID', example='12'))->str:
-    return f"Вы вошли как пользователь № {userid}"
+@app.post('/user/{username}/{age}')
+async def create(username, age) -> str:
+    a=str(int(max(users, key=int))+1)
+    users[a]=f"Имя: {str(username)}, возраст: {str(age)}"
+    return f"User {a} is registered"
 
 
-@app.get('/user/{username}/{age}')
-async def idser(username:str=Path(min_length=5, max_length=20, description='Enter username', example='urban'),
-                age : int=Path(ge=18, le=120, description='Enter age', example='119'))->str:
-    return f"Информация о пользователе. Имя: {username}, Возраст: {age}"
+@app.put('/user/{user_id}/{username}/{age}')
+async def update(user_id, username, age) ->str:
+    users[user_id]=f'Имя: {str(username)}, возраст: {str(age)}'
+    return f"The user {user_id} is updated"
+
+
+@app.delete('/user/{user_id}')
+async def delete(user_id)->str:
+    users.pop(user_id)
+    return f'The user {user_id} was deleted'
