@@ -1,34 +1,54 @@
 import fastapi
-from fastapi import Path
-from typing import Annotated
-app=fastapi.FastAPI()
+from pydantic import BaseModel
+from fastapi import Path,  HTTPException, Body
+from typing import List
 
-#$ python3 -m uvicorn fgfg:app
-users = {'1': 'Имя: Example, возраст: 18'}
+app = fastapi.FastAPI()
+
+# $ python3 -m uvicorn iscandar:app
+users = []
+
+
+class User(BaseModel):
+    id: int = None
+    nick: str
+    year: int
+
+
+@app.get('/')
+async def welcome() -> str:
+    return 'welcome to my sait'
 
 
 @app.get('/users')
-async def get() -> dict:
+async def get() -> List[User]:
     return users
 
 
-@app.post('/user/{username}/{age}')
-async def create(username:str=Path(min_length=5, max_length=20, description='Enter username', example='urban'),
-                 age:int=Path(ge=18, le=120, description='EnterUSER age', example='22')) -> str:
-    a=str(int(max(users, key=int))+1)
-    users[a]=f"Имя: {str(username)}, возраст: {str(age)}"
-    return f"User {a} is registered"
-
+@app.post(path='/user/{username}/{age}')
+async def create(username:str, age:int) -> User:
+    user:User = User(id=len(users)+1, nick=username, year=age)
+    users.append(user)
+    return user
 
 @app.put('/user/{user_id}/{username}/{age}')
-async def update(user_id:int = Path(ge=1, le=100, description='EnterUSER id', example='12'),
-                 username:str=Path(min_length=5, max_length=20, description='Enter username', example='urban'),
-                 age:int=Path(ge=18, le=120, description='Enter age', example='119')) ->str:
-    users[user_id]=f'Имя: {str(username)}, возраст: {str(age)}'
-    return f"The user {user_id} is updated"
-
+async def update(user_id, username, age) -> str:
+    try:
+        a=users[user_id]
+        a.nick=username
+        a.year=age
+        users[user_id]=a
+        return 'all was successful'
+    except IndexError:
+        raise HTTPException(status_code=404, detail="User was not found")
+    
 
 @app.delete('/user/{user_id}')
-async def delete(user_id:int=Path(ge=1, le=100, description='EnterUSER id', example='12'))->str:
-    users.pop(user_id)
-    return f'The user {user_id} was deleted'
+async def delete(user_id) -> str:
+    global users
+    try:
+        new_users=users[:user_id]+users[user_id+1:]
+        users=new_users
+        return 'User was deleted'
+    except:
+        HTTPException(status_code=404, detail="User was not found")
