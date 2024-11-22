@@ -1,6 +1,6 @@
 import fastapi
 from pydantic import BaseModel
-from fastapi import Path,  HTTPException, Body
+from fastapi import Path, HTTPException, Body
 from typing import List
 
 app = fastapi.FastAPI()
@@ -26,29 +26,29 @@ async def get() -> List[User]:
 
 
 @app.post(path='/user/{username}/{age}')
-async def create(username:str, age:int) -> User:
-    user:User = User(id=len(users)+1, nick=username, year=age)
+async def create(username: str, age: int) -> User:
+    user: User = User(id=len(users) + 1, nick=username, year=age)
     users.append(user)
     return user
+
 
 @app.put('/user/{user_id}/{username}/{age}')
 async def update(user_id, username, age) -> str:
     try:
-        a=users[user_id]
-        a.nick=username
-        a.year=age
-        users[user_id]=a
+        a:User=User(id=user_id, nick=username, year=age)
+        users[user_id] = a
         return 'all was successful'
     except IndexError:
         raise HTTPException(status_code=404, detail="User was not found")
-    
+
 
 @app.delete('/user/{user_id}')
 async def delete(user_id) -> str:
     global users
     try:
-        new_users=users[:user_id]+users[user_id+1:]
-        users=new_users
+        new_users = users[:user_id - 1] + users[user_id:]
+        users = new_users
         return 'User was deleted'
     except:
         HTTPException(status_code=404, detail="User was not found")
+
