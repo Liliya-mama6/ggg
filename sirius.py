@@ -7,6 +7,7 @@ app = fastapi.FastAPI()
 
 # $ python3 -m uvicorn iscandar:app
 users = []
+a=0
 
 
 class User(BaseModel):
@@ -27,7 +28,9 @@ async def get() -> List[User]:
 
 @app.post(path='/user/{username}/{age}')
 async def create(username: str, age: int) -> User:
-    user: User = User(id=len(users) + 1, nick=username, year=age)
+    global a
+    a+=1
+    user: User = User(id=a, nick=username, year=age)
     users.append(user)
     return user
 
