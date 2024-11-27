@@ -28,19 +28,20 @@ async def get() -> List[User]:
 
 @app.post(path='/user/{username}/{age}')
 async def create(username: str, age: int) -> User:
-    global a
-    a+=1
+    a=max(i.id for i in users)
     user: User = User(id=a, nick=username, year=age)
     users.append(user)
     return user
 
 
 @app.put('/user/{user_id}/{username}/{age}')
-async def update(user_id, username, age) -> str:
+async def update(user_id, username, age) -> User:
     try:
-        a:User=User(id=user_id, nick=username, year=age)
-        users[user_id] = a
-        return 'all was successful'
+        for i in users:
+            if i.id==user_id:
+                i.nick=username
+                i.year=age
+                return i
     except IndexError:
         raise HTTPException(status_code=404, detail="User was not found")
 
@@ -49,9 +50,12 @@ async def update(user_id, username, age) -> str:
 async def delete(user_id) -> str:
     global users
     try:
-        new_users = users[:user_id - 1] + users[user_id:]
-        users = new_users
-        return 'User was deleted'
+        c=0
+        for i in users:
+            if i.id==user_id:
+                del users[c]
+                return 'user was deleted'
+            c+=1
     except:
         HTTPException(status_code=404, detail="User was not found")
 
